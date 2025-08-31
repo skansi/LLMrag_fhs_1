@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Student Notes Scanner</string>
+    <string name="scan_notes">Scan Notes</string>
+    <string name="view_history">View History</string>
+    <string name="camera_permission_required">Camera permission is required to scan notes</string>
+    <string name="photo_capture_failed">Photo capture failed</string>
+    <string name="processing_image">Processing image with OCR...</string>
+    <string name="text_extracted_successfully">Text extracted successfully!</string>
+    <string name="no_text_found">No text found in image</string>
+    <string name="ocr_processing_failed">OCR processing failed</string>
+    <string name="retake">Retake</string>
+    <string name="edit_text">Edit Text</string>
+    <string name="done_editing">Done Editing</string>
+    <string name="send_to_chatbot">Send to AI Chatbot</string>
+    <string name="complete_notes_with_ai">Complete Notes with AI</string>
+    <string name="share">Share</string>
+    <string name="start_new">Start New</string>
+    <string name="connecting_to_chatbot">Connecting to AI chatbot...</string>
+    <string name="ai_analyzing">AI is analyzing and completing your notes...</string>
+    <string name="notes_completed_successfully">Notes completed successfully!</string>
+    <string name="share_notes">Share Notes</string>
+</resources>
