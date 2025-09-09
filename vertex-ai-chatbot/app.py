@@ -10,22 +10,16 @@ import logging
 from datetime import datetime
 import json
 from werkzeug.utils import secure_filename
-
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-
-# Configuration
 PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT', 'your-project-id')
 LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION', 'us-central1')
 BUCKET_NAME = os.getenv('STORAGE_BUCKET', 'student-notes-storage')
 
-# Initialize Vertex AI
 vertexai.init(project=PROJECT_ID, location=LOCATION)
 
-# Initialize ChromaDB for vector database
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 literature_collection = chroma_client.get_or_create_collection(
     name="literature_database",
@@ -38,7 +32,6 @@ class NotesCompletionService:
         self.storage_client = storage.Client()
         
     def upload_text_file(self, text_content, filename):
-        """Upload extracted text to Google Cloud Storage"""
         try:
             bucket = self.storage_client.bucket(BUCKET_NAME)
             blob = bucket.blob(f"extracted_texts/{filename}")
@@ -49,7 +42,7 @@ class NotesCompletionService:
             return None
     
     def query_literature_database(self, text_content, n_results=5):
-        """Query the vector database for relevant literature"""
+        
         try:
             results = literature_collection.query(
                 query_texts=[text_content],
@@ -61,9 +54,9 @@ class NotesCompletionService:
             return []
     
     def complete_notes_with_ai(self, extracted_text, context_docs=None):
-        """Use Vertex AI to complete and enhance the notes"""
+        
         try:
-            # Build context from vector database results
+           
             context = ""
             if context_docs:
                 context = "\\n\\nRelevant academic context:\\n" + "\\n".join(context_docs[:3])
@@ -102,7 +95,7 @@ class NotesCompletionService:
             raise
     
     def add_literature_to_database(self, document_text, metadata):
-        """Add academic literature to the vector database"""
+        
         try:
             doc_id = f"doc_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             literature_collection.add(
@@ -115,12 +108,10 @@ class NotesCompletionService:
             logger.error(f"Failed to add literature to database: {str(e)}")
             raise
 
-# Initialize the service
 notes_service = NotesCompletionService()
 
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
     return jsonify({
         'status': 'healthy',
         'timestamp': datetime.now().isoformat()
@@ -128,7 +119,6 @@ def health_check():
 
 @app.route('/api/upload-text', methods=['POST'])
 def upload_extracted_text():
-    """Endpoint to receive extracted text from Android app"""
     try:
         data = request.get_json()
         
@@ -141,7 +131,6 @@ def upload_extracted_text():
         text_content = data['text']
         filename = data.get('fileName', f"notes_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt")
         
-        # Upload to cloud storage
         file_url = notes_service.upload_text_file(text_content, filename)
         
         if file_url:
@@ -166,7 +155,6 @@ def upload_extracted_text():
 
 @app.route('/api/complete-notes', methods=['POST'])
 def complete_notes():
-    """Endpoint to complete notes using Vertex AI and vector database"""
     try:
         data = request.get_json()
         
@@ -179,15 +167,12 @@ def complete_notes():
         extracted_text = data['extractedText']
         subject = data.get('subject', '')
         
-        # Query vector database for relevant literature
         logger.info("Querying literature database...")
         relevant_docs = notes_service.query_literature_database(extracted_text)
         
-        # Complete notes with AI
         logger.info("Completing notes with Vertex AI...")
         completed_notes = notes_service.complete_notes_with_ai(extracted_text, relevant_docs)
         
-        # Prepare sources information
         sources = []
         if relevant_docs:
             sources = [f"Academic reference {i+1}" for i in range(len(relevant_docs[:3]))]
@@ -209,7 +194,6 @@ def complete_notes():
 
 @app.route('/api/add-literature', methods=['POST'])
 def add_literature():
-    """Endpoint to add academic literature to the vector database"""
     try:
         data = request.get_json()
         
@@ -245,7 +229,6 @@ def add_literature():
 
 @app.route('/api/search-literature', methods=['POST'])
 def search_literature():
-    """Endpoint to search the literature database"""
     try:
         data = request.get_json()
         query = data.get('query', '')

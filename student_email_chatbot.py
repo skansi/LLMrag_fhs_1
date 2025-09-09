@@ -1,10 +1,3 @@
-"""
-Student Email Chatbot with Vector Database
-
-A comprehensive chatbot system that uses OpenAI API and vector similarity search
-to answer student emails based on uploaded documents.
-"""
-
 import os
 import openai
 import numpy as np
@@ -18,33 +11,18 @@ import re
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import logging
-
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
 @dataclass
 class DocumentChunk:
-    """Represents a chunk of text from a document with its metadata."""
     id: str
     content: str
     source_file: str
     chunk_index: int
     embedding: Optional[np.ndarray] = None
     metadata: Optional[Dict] = None
-
-
-class VectorDatabase:
-    """Vector database for storing and retrieving document embeddings."""
-    
+class VectorDatabase: 
     def __init__(self, model_name: str = "all-MiniLM-L6-v2"):
-        """
-        Initialize the vector database.
-        
-        Args:
-            model_name: Name of the sentence transformer model to use
-        """
         self.model = SentenceTransformer(model_name)
         self.chunks: List[DocumentChunk] = []
         self.embeddings_matrix: Optional[np.ndarray] = None
@@ -52,25 +30,8 @@ class VectorDatabase:
         
     def add_document(self, content: str, source_file: str, 
                     chunk_size: int = 512, overlap: int = 50) -> List[str]:
-        """
-        Add a document to the vector database by chunking and embedding it.
-        
-        Args:
-            content: Text content of the document
-            source_file: Name/path of the source file
-            chunk_size: Size of text chunks in characters
-            overlap: Overlap between chunks in characters
-            
-        Returns:
-            List of chunk IDs that were added
-        """
-        # Clean and preprocess text
         content = self._preprocess_text(content)
-        
-        # Split into chunks
         chunks = self._chunk_text(content, chunk_size, overlap)
-        
-        # Create embeddings for chunks
         chunk_ids = []
         embeddings = self.model.encode(chunks)
         
@@ -92,7 +53,6 @@ class VectorDatabase:
             self.chunks.append(document_chunk)
             chunk_ids.append(chunk_id)
         
-        # Rebuild embeddings matrix
         self._rebuild_embeddings_matrix()
         
         logger.info(f"Added {len(chunks)} chunks from {source_file}")
@@ -100,29 +60,13 @@ class VectorDatabase:
     
     def search_similar(self, query: str, top_k: int = 5, 
                       min_similarity: float = 0.3) -> List[Tuple[DocumentChunk, float]]:
-        """
-        Search for similar document chunks based on query.
         
-        Args:
-            query: Search query
-            top_k: Number of top results to return
-            min_similarity: Minimum similarity threshold
-            
-        Returns:
-            List of tuples (DocumentChunk, similarity_score)
-        """
         if not self.chunks or self.embeddings_matrix is None:
             return []
         
-        # Encode query
-        query_embedding = self.model.encode([query])
-        
-        # Calculate similarities
-        similarities = cosine_similarity(query_embedding, self.embeddings_matrix)[0]
-        
-        # Get top-k similar chunks
-        indices = np.argsort(similarities)[::-1][:top_k]
-        
+        query_embedding = self.model.encode([query])         # Encode query
+        similarities = cosine_similarity(query_embedding, self.embeddings_matrix)[0]         # Calculate similarities
+        indices = np.argsort(similarities)[::-1][:top_k]         # Get top-k similar chunks
         results = []
         for idx in indices:
             similarity = similarities[idx]
@@ -132,7 +76,6 @@ class VectorDatabase:
         return results
     
     def save_database(self, filepath: Optional[str] = None) -> bool:
-        """Save the vector database to disk."""
         try:
             save_path = filepath or self.db_path
             with open(save_path, 'wb') as f:
@@ -148,7 +91,6 @@ class VectorDatabase:
             return False
     
     def load_database(self, filepath: Optional[str] = None) -> bool:
-        """Load the vector database from disk."""
         try:
             load_path = filepath or self.db_path
             if not os.path.exists(load_path):
@@ -167,7 +109,6 @@ class VectorDatabase:
             return False
     
     def get_stats(self) -> Dict[str, Any]:
-        """Get database statistics."""
         return {
             "total_chunks": len(self.chunks),
             "total_documents": len(set(chunk.source_file for chunk in self.chunks)),
@@ -176,23 +117,17 @@ class VectorDatabase:
         }
     
     def _preprocess_text(self, text: str) -> str:
-        """Clean and preprocess text."""
-        # Remove extra whitespace
         text = re.sub(r'\s+', ' ', text.strip())
-        # Remove special characters but keep punctuation
         text = re.sub(r'[^\w\s.,!?;:]', ' ', text)
         return text
     
     def _chunk_text(self, text: str, chunk_size: int, overlap: int) -> List[str]:
-        """Split text into overlapping chunks."""
         chunks = []
         start = 0
         
         while start < len(text):
             end = start + chunk_size
             chunk = text[start:end]
-            
-            # Try to break at word boundaries
             if end < len(text):
                 last_space = chunk.rfind(' ')
                 if last_space > chunk_size // 2:
@@ -208,57 +143,31 @@ class VectorDatabase:
         return [chunk for chunk in chunks if len(chunk.strip()) > 50]
     
     def _generate_chunk_id(self, content: str, source_file: str, index: int) -> str:
-        """Generate unique ID for a chunk."""
         content_hash = hashlib.md5(content.encode()).hexdigest()[:8]
         return f"{source_file}_{index}_{content_hash}"
     
     def _rebuild_embeddings_matrix(self):
-        """Rebuild the embeddings matrix from all chunks."""
         if self.chunks:
             embeddings = [chunk.embedding for chunk in self.chunks]
             self.embeddings_matrix = np.vstack(embeddings)
 
 
-class StudentEmailChatbot:
-    """OpenAI-powered chatbot for answering student emails."""
-    
+class StudentEmailChatbot:    
     def __init__(self, api_key: str, model: str = "gpt-3.5-turbo"):
-        """
-        Initialize the chatbot.
-        
-        Args:
-            api_key: OpenAI API key
-            model: OpenAI model to use
-        """
         openai.api_key = api_key
         self.model = model
         self.vector_db = VectorDatabase()
         self.conversation_history = []
-        
-        # Load existing database if available
         self.vector_db.load_database()
     
     def upload_document(self, filepath: str) -> bool:
-        """
-        Upload a document to the vector database.
-        
-        Args:
-            filepath: Path to the document file
-            
-        Returns:
-            bool: True if successful, False otherwise
-        """
         try:
-            # Read file content based on extension
             content = self._read_document(filepath)
-            
-            # Add to vector database
             chunk_ids = self.vector_db.add_document(
                 content=content,
                 source_file=os.path.basename(filepath)
             )
             
-            # Save database
             self.vector_db.save_database()
             
             logger.info(f"Successfully uploaded {filepath} with {len(chunk_ids)} chunks")
@@ -269,30 +178,17 @@ class StudentEmailChatbot:
             return False
     
     def answer_email(self, email_content: str, use_context: bool = True) -> str:
-        """
-        Generate an answer to a student email.
         
-        Args:
-            email_content: The student's email content
-            use_context: Whether to use vector database context
-            
-        Returns:
-            str: Generated response
-        """
         try:
-            # Extract question from email
             question = self._extract_question(email_content)
             
-            # Get relevant context from vector database
             context_chunks = []
             if use_context and question:
                 similar_chunks = self.vector_db.search_similar(question, top_k=3)
                 context_chunks = [chunk.content for chunk, score in similar_chunks]
             
-            # Prepare prompt
             prompt = self._build_prompt(email_content, question, context_chunks)
             
-            # Generate response using OpenAI
             response = openai.ChatCompletion.create(
                 model=self.model,
                 messages=[
@@ -305,7 +201,6 @@ class StudentEmailChatbot:
             
             answer = response.choices[0].message.content.strip()
             
-            # Store in conversation history
             self.conversation_history.append({
                 "timestamp": datetime.now().isoformat(),
                 "email": email_content,
@@ -321,11 +216,9 @@ class StudentEmailChatbot:
             return "I apologize, but I'm having trouble processing your request right now. Please try again later or contact support directly."
     
     def get_database_stats(self) -> Dict[str, Any]:
-        """Get vector database statistics."""
         return self.vector_db.get_stats()
     
     def _read_document(self, filepath: str) -> str:
-        """Read document content based on file extension."""
         ext = os.path.splitext(filepath)[1].lower()
         
         if ext == '.txt':
@@ -336,7 +229,6 @@ class StudentEmailChatbot:
                 data = json.load(f)
                 return json.dumps(data, indent=2)
         else:
-            # For other formats, try reading as text
             try:
                 with open(filepath, 'r', encoding='utf-8') as f:
                     return f.read()
@@ -345,8 +237,6 @@ class StudentEmailChatbot:
                     return f.read()
     
     def _extract_question(self, email_content: str) -> str:
-        """Extract the main question from email content."""
-        # Simple heuristic: look for question marks or common question patterns
         sentences = re.split(r'[.!?]+', email_content)
         questions = [s.strip() for s in sentences if '?' in s or 
                     any(word in s.lower() for word in ['how', 'what', 'when', 'where', 'why', 'can', 'could', 'would'])]
@@ -354,12 +244,10 @@ class StudentEmailChatbot:
         if questions:
             return questions[0]
         
-        # If no clear question, return first significant sentence
         significant_sentences = [s.strip() for s in sentences if len(s.strip()) > 20]
         return significant_sentences[0] if significant_sentences else email_content[:200]
     
     def _build_prompt(self, email_content: str, question: str, context_chunks: List[str]) -> str:
-        """Build the prompt for OpenAI."""
         prompt = f"Student Email:\n{email_content}\n\n"
         
         if context_chunks:
@@ -374,7 +262,6 @@ class StudentEmailChatbot:
         return prompt
     
     def _get_system_prompt(self) -> str:
-        """Get the system prompt for the chatbot."""
         return """You are a helpful academic assistant responding to student emails. 
 
 Your responsibilities:
@@ -394,19 +281,14 @@ Always structure your responses with:
 
 
 def demo_chatbot():
-    """Demonstrate the chatbot functionality."""
     print("=== Student Email Chatbot Demo ===\n")
-    
-    # Note: You'll need to set your OpenAI API key
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         print("Please set your OPENAI_API_KEY environment variable")
         return
     
-    # Initialize chatbot
     chatbot = StudentEmailChatbot(api_key)
     
-    # Create sample documents
     sample_doc1 = """
     Course Syllabus - Computer Science 101
     
@@ -428,7 +310,6 @@ def demo_chatbot():
     Collaboration is allowed on homework but not on exams.
     """
     
-    # Save sample document and upload it
     with open("sample_syllabus.txt", "w") as f:
         f.write(sample_doc1)
     
@@ -436,11 +317,9 @@ def demo_chatbot():
     success = chatbot.upload_document("sample_syllabus.txt")
     print(f"   Upload successful: {success}")
     
-    # Show database stats
     stats = chatbot.get_database_stats()
     print(f"\n2. Database stats: {stats}")
     
-    # Sample student emails
     student_emails = [
         "Hi Professor, I'm wondering what your office hours are? I need help with the assignment. Thanks!",
         "Hello, I had a family emergency and couldn't submit my assignment on time. Can I get an extension?",
@@ -452,11 +331,9 @@ def demo_chatbot():
         print(f"\n--- Email {i} ---")
         print(f"Student: {email}")
         
-        # Note: This would use actual OpenAI API in real usage
         print("Bot: [OpenAI API response would appear here]")
         print("(Set OPENAI_API_KEY environment variable to test with real API)")
     
-    # Cleanup
     try:
         os.remove("sample_syllabus.txt")
         print("\n4. Cleaned up demo files")

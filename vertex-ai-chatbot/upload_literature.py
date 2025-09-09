@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-"""
-Literature Upload Script for Student Notes AI System
-
-This script allows you to upload academic literature and reference materials
-to the vector database for enhanced note completion.
-"""
 
 import os
 import sys
@@ -12,9 +5,7 @@ import requests
 import json
 from pathlib import Path
 
-def upload_literature_file(file_path, title=None, author=None, subject=None, api_url="http://localhost:8080"):
-    """Upload a literature file to the vector database"""
-    
+def upload_literature_file(file_path, title=None, author=None, subject=None, api_url="http://localhost:8080"):    
     if not os.path.exists(file_path):
         print(f"Error: File {file_path} does not exist")
         return False
@@ -22,9 +13,7 @@ def upload_literature_file(file_path, title=None, author=None, subject=None, api
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             content = file.read()
-        
-        # Extract filename for default title
-        filename = Path(file_path).stem
+                filename = Path(file_path).stem
         
         data = {
             'text': content,
@@ -38,22 +27,21 @@ def upload_literature_file(file_path, title=None, author=None, subject=None, api
         if response.status_code == 200:
             result = response.json()
             if result['success']:
-                print(f"✅ Successfully uploaded: {data['title']}")
-                print(f"   Document ID: {result['documentId']}")
+                print(f" Successfully uploaded: {data['title']}")
+                print(f" Document ID: {result['documentId']}")
                 return True
             else:
-                print(f"❌ Upload failed: {result['message']}")
+                print(f" Upload failed: {result['message']}")
                 return False
         else:
-            print(f"❌ HTTP Error {response.status_code}: {response.text}")
+            print(f" HTTP Error {response.status_code}: {response.text}")
             return False
             
     except Exception as e:
-        print(f"❌ Error uploading file: {str(e)}")
+        print(f" Error uploading file: {str(e)}")
         return False
 
 def upload_directory(directory_path, subject=None, api_url="http://localhost:8080"):
-    """Upload all text files in a directory"""
     
     if not os.path.isdir(directory_path):
         print(f"Error: Directory {directory_path} does not exist")
@@ -74,7 +62,7 @@ def upload_directory(directory_path, subject=None, api_url="http://localhost:808
         if upload_literature_file(str(file_path), subject=subject, api_url=api_url):
             success_count += 1
     
-    print(f"\\n📊 Upload complete: {success_count}/{len(text_files)} files uploaded successfully")
+    print(f"\\n Upload complete: {success_count}/{len(text_files)} files uploaded successfully")
 
 def main():
     if len(sys.argv) < 2:
@@ -92,7 +80,6 @@ def main():
     
     path = sys.argv[1]
     
-    # Parse command line arguments
     title = None
     author = None
     subject = None
@@ -115,14 +102,13 @@ def main():
         else:
             i += 1
     
-    # Check if API is available
     try:
         response = requests.get(f"{api_url}/health")
         if response.status_code != 200:
-            print(f"❌ API not available at {api_url}")
+            print(f" API not available at {api_url}")
             return
     except requests.exceptions.RequestException:
-        print(f"❌ Cannot connect to API at {api_url}")
+        print(f" Cannot connect to API at {api_url}")
         print("   Make sure the Flask server is running")
         return
     

@@ -1,27 +1,20 @@
-#!/usr/bin/env python3
-"""
-Test script for the Student Notes AI System
-"""
-
 import requests
 import json
 
 def test_api_health(api_url="http://localhost:8080"):
-    """Test if the API is running"""
     try:
         response = requests.get(f"{api_url}/health")
         if response.status_code == 200:
             print("✅ API health check passed")
             return True
         else:
-            print(f"❌ API health check failed: {response.status_code}")
+            print(f"API health check failed: {response.status_code}")
             return False
     except requests.exceptions.RequestException as e:
-        print(f"❌ Cannot connect to API: {e}")
+        print(f"Cannot connect to API: {e}")
         return False
 
 def test_text_upload(api_url="http://localhost:8080"):
-    """Test text upload functionality"""
     test_data = {
         "text": "This is a test note from the Android app. It contains some handwritten content about biology.",
         "fileName": "test_notes.txt",
@@ -36,17 +29,16 @@ def test_text_upload(api_url="http://localhost:8080"):
                 print("✅ Text upload test passed")
                 return True
             else:
-                print(f"❌ Text upload test failed: {result['message']}")
+                print(f" Text upload test failed: {result['message']}")
                 return False
         else:
-            print(f"❌ Text upload test failed: {response.status_code}")
+            print(f" Text upload test failed: {response.status_code}")
             return False
     except Exception as e:
-        print(f"❌ Text upload test error: {e}")
+        print(f" Text upload test error: {e}")
         return False
 
 def test_notes_completion(api_url="http://localhost:8080"):
-    """Test notes completion functionality"""
     test_data = {
         "extractedText": "Photosynthesis - plants use sunlight to make food. Chlorophyll important. CO2 + H2O -> glucose + O2",
         "subject": "Biology"
@@ -61,17 +53,16 @@ def test_notes_completion(api_url="http://localhost:8080"):
                 print(f"   Completed notes length: {len(result['completedNotes'])} characters")
                 return True
             else:
-                print(f"❌ Notes completion test failed: {result.get('error', 'Unknown error')}")
+                print(f" Notes completion test failed: {result.get('error', 'Unknown error')}")
                 return False
         else:
-            print(f"❌ Notes completion test failed: {response.status_code}")
+            print(f" Notes completion test failed: {response.status_code}")
             return False
     except Exception as e:
-        print(f"❌ Notes completion test error: {e}")
+        print(f" Notes completion test error: {e}")
         return False
 
 def test_literature_upload(api_url="http://localhost:8080"):
-    """Test literature upload functionality"""
     test_data = {
         "text": "Photosynthesis is the process by which plants convert light energy into chemical energy. The process occurs in two main stages: light-dependent reactions and light-independent reactions (Calvin cycle).",
         "title": "Introduction to Photosynthesis",
@@ -88,17 +79,16 @@ def test_literature_upload(api_url="http://localhost:8080"):
                 print(f"   Document ID: {result['documentId']}")
                 return True
             else:
-                print(f"❌ Literature upload test failed: {result['message']}")
+                print(f" Literature upload test failed: {result['message']}")
                 return False
         else:
-            print(f"❌ Literature upload test failed: {response.status_code}")
+            print(f" Literature upload test failed: {response.status_code}")
             return False
     except Exception as e:
-        print(f"❌ Literature upload test error: {e}")
+        print(f" Literature upload test error: {e}")
         return False
 
 def test_literature_search(api_url="http://localhost:8080"):
-    """Test literature search functionality"""
     test_data = {
         "query": "photosynthesis chlorophyll",
         "n_results": 3
@@ -109,26 +99,24 @@ def test_literature_search(api_url="http://localhost:8080"):
         if response.status_code == 200:
             result = response.json()
             if result['success']:
-                print("✅ Literature search test passed")
+                print("Literature search test passed")
                 print(f"   Found {result['count']} results")
                 return True
             else:
-                print(f"❌ Literature search test failed: {result['message']}")
+                print(f" Literature search test failed: {result['message']}")
                 return False
         else:
-            print(f"❌ Literature search test failed: {response.status_code}")
+            print(f" Literature search test failed: {response.status_code}")
             return False
     except Exception as e:
-        print(f"❌ Literature search test error: {e}")
+        print(f" Literature search test error: {e}")
         return False
 
 def main():
-    print("🧪 Testing Student Notes AI System API")
+    print(" Testing Student Notes AI System API")
     print("=" * 50)
     
     api_url = "http://localhost:8080"
-    
-    # Run all tests
     tests = [
         ("API Health Check", test_api_health),
         ("Text Upload", test_text_upload),
@@ -146,12 +134,12 @@ def main():
             passed += 1
     
     print("\\n" + "=" * 50)
-    print(f"📊 Test Results: {passed}/{total} tests passed")
+    print(f" Test Results: {passed}/{total} tests passed")
     
     if passed == total:
-        print("🎉 All tests passed! The system is ready.")
+        print(" All tests passed! The system is ready.")
     else:
-        print("⚠️  Some tests failed. Check the server logs for details.")
+        print(" Some tests failed. Check the server logs for details.")
 
 if __name__ == '__main__':
     main()

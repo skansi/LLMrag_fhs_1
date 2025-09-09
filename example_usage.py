@@ -1,41 +1,24 @@
-"""
-Example usage of the Student Email Chatbot
-
-This script demonstrates how to use the chatbot for answering student emails.
-"""
-
 import os
 from dotenv import load_dotenv
 from student_email_chatbot import StudentEmailChatbot
-
-# Load environment variables
 load_dotenv()
-
 def main():
-    """Main example function."""
     print("=== Student Email Chatbot Example ===\n")
-    
-    # Get API key from environment
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         print("Error: Please set your OPENAI_API_KEY in a .env file")
         print("Copy .env.example to .env and add your API key")
         return
     
-    # Initialize chatbot
     print("Initializing chatbot...")
     chatbot = StudentEmailChatbot(api_key)
-    
-    # Upload some documents (replace with your actual documents)
     print("\n1. Upload documents to vector database:")
-    
     sample_documents = [
         "course_syllabus.txt",
         "assignment_guidelines.txt", 
         "grading_policy.txt",
         "office_hours.txt"
     ]
-    
     for doc in sample_documents:
         if os.path.exists(doc):
             success = chatbot.upload_document(doc)
@@ -43,14 +26,12 @@ def main():
         else:
             print(f"   {doc}: File not found (skipping)")
     
-    # Show database statistics
     stats = chatbot.get_database_stats()
     print(f"\n2. Vector Database Stats:")
     print(f"   Total chunks: {stats['total_chunks']}")
     print(f"   Total documents: {stats['total_documents']}")
     print(f"   Memory usage: {stats['memory_usage_mb']:.2f} MB")
     
-    # Example student emails
     student_emails = [
         {
             "subject": "Question about assignment deadline",
@@ -66,7 +47,7 @@ def main():
         }
     ]
     
-    print(f"\n3. Processing student emails:")
+    print(f"Processing student emails:")
     
     for i, email in enumerate(student_emails, 1):
         print(f"\n--- Email {i}: {email['subject']} ---")
@@ -85,7 +66,6 @@ def main():
 
 
 def create_sample_documents():
-    """Create sample documents for testing."""
     documents = {
         "course_syllabus.txt": """
         Computer Science 101 - Introduction to Programming
@@ -173,7 +153,6 @@ def create_sample_documents():
 
 
 if __name__ == "__main__":
-    # Uncomment the next line to create sample documents
     # create_sample_documents()
     
     main()

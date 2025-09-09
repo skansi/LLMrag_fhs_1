@@ -1,8 +1,3 @@
-"""
-Setup script for Student Email Chatbot
-
-This script helps set up the environment and dependencies for the chatbot.
-"""
 
 import os
 import sys
@@ -11,52 +6,40 @@ import shutil
 from pathlib import Path
 
 def check_python_version():
-    """Check if Python version is compatible."""
     version = sys.version_info
     if version.major < 3 or (version.major == 3 and version.minor < 7):
-        print("❌ Python 3.7 or higher is required")
+        print("Python 3.7 or higher is required")
         print(f"Current version: {version.major}.{version.minor}.{version.micro}")
         return False
     
-    print(f"✅ Python version: {version.major}.{version.minor}.{version.micro}")
+    print(f"Python version: {version.major}.{version.minor}.{version.micro}")
     return True
 
 def install_dependencies():
-    """Install required dependencies."""
-    print("\n📦 Installing dependencies...")
-    
+    print("\n Installing dependencies...")
     try:
-        # Upgrade pip first
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
-        print("✅ Pip upgraded successfully")
-        
-        # Install requirements
+        print("Pip upgraded successfully")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
-        print("✅ Dependencies installed successfully")
+        print("Dependencies installed successfully")
         return True
-        
     except subprocess.CalledProcessError as e:
-        print(f"❌ Failed to install dependencies: {e}")
+        print(f" Failed to install dependencies: {e}")
         return False
 
 def setup_environment():
-    """Set up environment file."""
-    print("\n🔧 Setting up environment...")
-    
+    print("\n Setting up environment...")
     env_file = Path(".env")
     env_example = Path(".env.example")
-    
     if env_file.exists():
-        print("⚠️  .env file already exists")
+        print(".env file already exists")
         return True
-    
     if env_example.exists():
         shutil.copy(env_example, env_file)
-        print("✅ Created .env file from template")
-        print("⚠️  Please edit .env and add your OpenAI API key")
+        print("Created .env file from template")
+        print("Please edit .env and add your OpenAI API key")
         return True
     else:
-        # Create basic .env file
         with open(env_file, 'w') as f:
             f.write("# OpenAI Configuration\n")
             f.write("OPENAI_API_KEY=your_openai_api_key_here\n")
@@ -64,44 +47,34 @@ def setup_environment():
             f.write("# Vector Database Configuration\n")
             f.write("VECTOR_DB_PATH=vector_db.pkl\n")
             f.write("EMBEDDING_MODEL=all-MiniLM-L6-v2\n")
-        
-        print("✅ Created .env file")
-        print("⚠️  Please edit .env and add your OpenAI API key")
+        print("Created .env file")
+        print("Please edit .env and add your OpenAI API key")
         return True
-
 def test_imports():
-    """Test if all required packages can be imported."""
-    print("\n🧪 Testing imports...")
-    
+    print("\n Testing imports...")
     required_packages = [
         "openai",
         "numpy",
         "sklearn",
         "sentence_transformers"
     ]
-    
     failed_imports = []
-    
     for package in required_packages:
         try:
             __import__(package)
-            print(f"✅ {package}")
+            print(f"{package}")
         except ImportError:
-            print(f"❌ {package}")
-            failed_imports.append(package)
-    
+            print(f"{package}")
+            failed_imports.append(package)   
     if failed_imports:
-        print(f"\n❌ Failed to import: {', '.join(failed_imports)}")
+        print(f"\n Failed to import: {', '.join(failed_imports)}")
         print("Try running: pip install -r requirements.txt")
         return False
-    
-    print("✅ All packages imported successfully")
+    print("All packages imported successfully")
     return True
 
 def create_sample_docs():
-    """Create sample documents for testing."""
-    print("\n📄 Creating sample documents...")
-    
+    print("\n Creating sample documents...")
     sample_docs = {
         "sample_syllabus.txt": """
 Computer Science 101 - Introduction to Programming
@@ -190,79 +163,65 @@ A: Limited use is allowed for learning concepts, but final submissions must be y
         if not os.path.exists(filename):
             with open(filename, 'w', encoding='utf-8') as f:
                 f.write(content)
-            print(f"✅ Created {filename}")
+            print(f"Created {filename}")
             created_count += 1
         else:
             print(f"⚠️  {filename} already exists")
     
     if created_count > 0:
-        print(f"✅ Created {created_count} sample documents")
+        print(f"Created {created_count} sample documents")
     return True
 
 def run_quick_test():
-    """Run a quick test of the chatbot functionality."""
-    print("\n🚀 Running quick test...")
+    print("\n Running quick test...")
     
     try:
-        from student_email_chatbot import VectorDatabase
-        
-        # Test vector database
+        from student_email_chatbot import VectorDatabase   
         db = VectorDatabase()
-        
-        # Add a simple document
         test_content = "Office hours are Tuesdays and Thursdays from 2-4 PM in room 205."
         chunks = db.add_document(test_content, "test_doc.txt")
-        
         if chunks:
-            print("✅ Vector database test passed")
+            print("Vector database test passed")
             
-            # Test search
             results = db.search_similar("when are office hours", top_k=1)
             if results:
-                print("✅ Vector search test passed")
+                print("Vector search test passed")
                 return True
             else:
-                print("❌ Vector search test failed")
+                print("Vector search test failed")
                 return False
         else:
-            print("❌ Vector database test failed")
+            print("Vector database test failed")
             return False
             
     except Exception as e:
-        print(f"❌ Quick test failed: {e}")
+        print(f" Quick test failed: {e}")
         return False
 
 def main():
-    """Main setup function."""
-    print("🎓 Student Email Chatbot Setup")
+    print("Student Email Chatbot Setup")
     print("=" * 40)
     
-    # Check Python version
     if not check_python_version():
         return False
     
-    # Install dependencies
     if not install_dependencies():
         return False
     
-    # Setup environment
     if not setup_environment():
         return False
     
-    # Test imports
     if not test_imports():
         return False
     
-    # Create sample documents
     create_sample_docs()
     
-    # Run quick test
     if not run_quick_test():
-        print("\n⚠️  Quick test failed, but setup completed")
+        print("\n Quick test failed, but setup completed")
         print("Please check your configuration and try running the example manually")
     
-    print("\n🎉 Setup completed successfully!")
-    print("\nNext steps:")
+    print("\n Setup completed successfully!")
+    print("\Next steps:")
     print("1. Edit .env file and add your OpenAI API key")
     print("2. Run: python example_usage.py")
     print("3. Or run: python student_email_chatbot.py for a demo")
